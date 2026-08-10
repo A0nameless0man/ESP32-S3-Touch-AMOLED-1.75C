@@ -1,23 +1,25 @@
 <div align="center">
   <h1>ESP32-S3-Touch-AMOLED-1.75C</h1>
   <p><strong>ESP32-S3 1.75-inch 466 x 466 QSPI AMOLED touch development board</strong></p>
+  <p><strong>English</strong> | <a href="README_ZH.md">简体中文</a></p>
   <p>
     <a href="https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/actions/workflows/examples.yml"><img alt="Build Examples" src="https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/actions/workflows/examples.yml/badge.svg"></a>
     <a href="https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/releases/latest"><img alt="Latest Release" src="https://img.shields.io/github/v/release/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C"></a>
     <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C"></a>
   </p>
   <p>
-    <a href="https://www.waveshare.com/esp32-s3-touch-amoled-1.75c.htm">Product Page</a> &middot;
-    <a href="https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/releases/latest">Firmware Releases</a> &middot;
-    <a href="examples/esp-idf/">ESP-IDF Examples</a> &middot;
-    <a href="examples/arduino/examples/">Arduino Examples</a> &middot;
-    <a href="docs/">Documentation</a>
+    <a href="https://www.waveshare.com/esp32-s3-touch-amoled-1.75c.htm">🌐 Product</a> &middot;
+    <a href="https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/releases/latest">📦 Firmware</a> &middot;
+    <a href="examples/esp-idf/">🧩 ESP-IDF</a> &middot;
+    <a href="examples/arduino/examples/">🔧 Arduino</a> &middot;
+    <a href="docs/">📚 Documentation</a>
   </p>
+  <p><img src="docs/images/esp32-s3-touch-amoled-1.75c.jpg" alt="ESP32-S3-Touch-AMOLED-1.75C development board"></p>
 </div>
 
 ---
 
-## Overview
+## ✨ Overview
 
 This repository provides example software, CI-built flashable firmware packages,
 factory recovery firmware, schematics, and maintainer documentation for the
@@ -27,7 +29,7 @@ The board combines an ESP32-S3 with a compact square AMOLED display, capacitive
 touch, motion sensing, power management, and audio interfaces in a watch-style
 development platform.
 
-## Hardware Overview
+## 🖥️ Hardware Overview
 
 | Feature | Device / interface |
 | --- | --- |
@@ -40,7 +42,7 @@ development platform.
 | Board support | Managed component: `waveshare/esp32_s3_touch_amoled_1_75c` (`^3.0.0`) |
 | Hardware files | [Schematic](Schematic/) |
 
-## Firmware Releases
+## 📦 Firmware Releases
 
 The fastest way to try an example is to use a ready-to-flash package from the
 [latest release](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/releases/latest).
@@ -62,7 +64,7 @@ Factory recovery images under [Firmware](Firmware/) are separate from
 CI-generated example firmware. See
 [Firmware Artifacts](docs/firmware.md) for details.
 
-## Examples
+## 🧪 Examples
 
 ### ESP-IDF
 
@@ -71,7 +73,7 @@ CI-generated example firmware. See
 | [01_AXP2101](examples/esp-idf/01_AXP2101/) | Power management and battery telemetry |
 | [02_lvgl_demo_v9](examples/esp-idf/02_lvgl_demo_v9/) | LVGL 9 display demo |
 | [03_esp-brookesia](examples/esp-idf/03_esp-brookesia/) | ESP-Brookesia application UI |
-| [04_Immersive_block](examples/esp-idf/04_Immersive_block/) | Motion-driven LVGL block demo |
+| [04_Immersive_block](examples/esp-idf/04_Immersive_block/main/main.c) | Motion-driven LVGL block demo |
 | [05_Spec_Analyzer](examples/esp-idf/05_Spec_Analyzer/) | Microphone spectrum analyzer |
 
 ### Arduino
@@ -90,20 +92,21 @@ Bundled Arduino libraries live under
 [`examples/arduino/libraries`](examples/arduino/libraries/). Their upstream
 library examples are intentionally excluded from the product CI matrix.
 
-## Supported Toolchains
+## 🛠️ Supported Toolchains
 
 | Surface | Version | Firmware builds |
 | --- | --- | ---: |
-| ESP-IDF | `v5.5.4` | 5 |
+| ESP-IDF | `v5.5.5` | 5 |
 | ESP-IDF | `v6.0.2` | 5 |
-| Arduino-ESP32 | `3.3.10` | 7 |
+| Arduino-ESP32 | `3.3.11` | 7 |
 
 The [Build Examples workflow](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/actions/workflows/examples.yml)
-runs two discovery jobs and 17 firmware build jobs. Each successful build is
+runs a lightweight policy job and two discovery jobs, then selects up to 17
+firmware build jobs from the changed-file scope. Each successful build is
 packaged as a flashable combined firmware artifact. See
 [Continuous Integration](docs/ci.md) for matrix and dispatch details.
 
-## Repository Layout
+## 🗂️ Repository Layout
 
 | Path | Purpose |
 | --- | --- |
@@ -116,7 +119,7 @@ packaged as a flashable combined firmware artifact. See
 | [`config/`](config/) | Shared ESP-IDF configuration overlays |
 | [`docs/`](docs/) | Repository, CI, component, and firmware notes |
 
-## Documentation
+## 📚 Documentation
 
 - [Repository Structure](docs/repository-structure.md)
 - [Continuous Integration](docs/ci.md)
@@ -125,7 +128,7 @@ packaged as a flashable combined firmware artifact. See
 - [ESP-Brookesia Notes](docs/brookesia.md)
 - [Release Tools](releases/README.md)
 
-## Support and Contributions
+## 🤝 Support and Contributions
 
 Contributions and reproducible issue reports are welcome. Include the example
 path, framework version, reproduction steps, expected behavior, actual
@@ -136,7 +139,7 @@ behavior, and relevant serial logs.
 - [Security Policy](SECURITY.md)
 - [Open an Issue](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75C/issues/new/choose)
 
-## License
+## 📄 License
 
 This repository is licensed under the Apache License 2.0. See
 [LICENSE](LICENSE).

@@ -6,7 +6,7 @@
 /*******************************************************************************
  * Size: 66 px
  * Bpp: 4
- * Opts: --bpp 4 --size 66 --font C:/!SVN/SquareLine/trunk/code/editor/examples/Smart_Gadget_240x320/assets/fonts/FuturaStdCondensedLightObl.otf -o C:/!SVN/SquareLine/trunk/code/editor/examples/Smart_Gadget_240x320/assets/fonts\ui_font_Number.c --format lvgl -r 0x20-0x7f --symbols 1234567890:° --no-compress --no-prefilter
+ * Font: Futura Std Condensed Light Oblique, 66 px, 4 bpp.
  ******************************************************************************/
 
 #include "../ui.h"

@@ -1,5 +1,7 @@
 # Contributing
 
+[English](CONTRIBUTING.md) | [简体中文](CONTRIBUTING_ZH.md)
+
 Thank you for helping improve this repository.
 
 ## Pull Requests

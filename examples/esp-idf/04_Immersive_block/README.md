@@ -1,53 +1,41 @@
-| Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C5 | ESP32-C6 | ESP32-C61 | ESP32-H2 | ESP32-H21 | ESP32-H4 | ESP32-P4 | ESP32-S2 | ESP32-S3 | Linux |
-| ----------------- | ----- | -------- | -------- | -------- | -------- | --------- | -------- | --------- | -------- | -------- | -------- | -------- | ----- |
+# Immersive Block
 
-# Hello World Example
+[English](README.md) | [简体中文](README_ZH.md)
 
-Starts a FreeRTOS task to print "Hello World".
+This ESP-IDF example renders movable LVGL shapes on the AMOLED display and uses
+QMI8658 acceleration data to move them as the board tilts.
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+## Requirements
 
-## How to use example
+- ESP32-S3-Touch-AMOLED-1.75C
+- ESP-IDF `v5.5.5` or `v6.0.2`
+- USB connection for flashing and monitoring
 
-Follow detailed instructions provided specifically for this example.
+The project uses the managed Waveshare BSP, the managed QMI8658 component, and
+LVGL 9.5.0 as declared in [`main/idf_component.yml`](main/idf_component.yml).
 
-Select the instructions depending on Espressif chip installed on your development board:
+## Build Entry Point
 
-- [ESP32 Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/stable/get-started/index.html)
-- [ESP32-S2 Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/get-started/index.html)
+The maintained application source is [`main/main.c`](main/main.c). From an
+ESP-IDF environment, configure the target and build this project with:
 
-
-## Example folder contents
-
-The project **hello_world** contains one source file in C language [hello_world_main.c](main/hello_world_main.c). The file is located in folder [main](main).
-
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt` files that provide set of directives and instructions describing the project's source files and targets (executable, library, or both).
-
-Below is short explanation of remaining files in the project folder.
-
-```
-├── CMakeLists.txt
-├── pytest_hello_world.py      Python script used for automated testing
-├── main
-│   ├── CMakeLists.txt
-│   └── hello_world_main.c
-└── README.md                  This is the file you are currently reading
+```text
+idf.py set-target esp32s3
+idf.py build
 ```
 
-For more information on structure and contents of ESP-IDF projects, please refer to Section [Build System](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html) of the ESP-IDF Programming Guide.
+Repository CI builds this example on both supported ESP-IDF release lines. See
+the repository [CI documentation](../../../docs/ci.md) for the complete matrix.
+
+## Runtime Notes
+
+- Keep the board stationary while the initial accelerometer calibration runs.
+- Tap the on-screen control to request recalibration when needed.
+- CI validates compilation and packaging; display, touch, and motion behavior
+  still require validation on the physical board.
 
 ## Troubleshooting
 
-* Program upload failure
-
-    * Hardware connection is not correct: run `idf.py -p PORT monitor`, and reboot your board to see if there are any output logs.
-    * The baud rate for downloading is too high: lower your baud rate in the `menuconfig` menu, and try again.
-
-## Technical support and feedback
-
-Please use the following feedback channels:
-
-* For technical queries, go to the [esp32.com](https://esp32.com/) forum
-* For a feature request or bug report, create a [GitHub issue](https://github.com/espressif/esp-idf/issues)
-
-We will get back to you as soon as possible.
+If flashing or monitoring fails, verify the USB connection, select the correct
+serial port, and retry with the complete firmware package produced by the same
+CI build.
