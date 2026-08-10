@@ -1,5 +1,7 @@
 # Firmware Artifacts
 
+[English](firmware.md) | [简体中文](firmware_ZH.md)
+
 This repository has two separate firmware sources: tagged CI builds and a factory recovery image.
 
 ## Release Firmware

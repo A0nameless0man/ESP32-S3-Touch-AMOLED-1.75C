@@ -1,13 +1,13 @@
 [English](pull_request_template.md) | [简体中文](pull_request_template_ZH.md)
 
-## Summary
+## 变更概要
 
 -
 
-## Validation
+## 验证
 
 -
 
-## Notes
+## 备注
 
 -

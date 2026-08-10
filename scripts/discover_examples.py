@@ -22,7 +22,7 @@ LEGACY_SELECTOR_PREFIXES = (
 
 
 def normalize(value: str) -> str:
-    value = value.replace("\\", "/").strip("/")
+    value = value.replace("\\", "/").strip().strip("/")
     for old, new in LEGACY_SELECTOR_PREFIXES:
         old = old.strip("/")
         new = new.strip("/")
@@ -36,7 +36,11 @@ def normalize(value: str) -> str:
 def selector_matches(entry: dict[str, str], selector: str) -> bool:
     if not selector or selector == "all":
         return True
-    selector = normalize(selector)
+    selectors = [normalize(item) for item in selector.split(",") if item]
+    return any(_one_selector_matches(entry, item) for item in selectors)
+
+
+def _one_selector_matches(entry: dict[str, str], selector: str) -> bool:
     path = normalize(entry["path"])
     name = entry["name"]
     ino = entry.get("ino", "")
@@ -112,8 +116,8 @@ def main() -> None:
     parser.add_argument("--repo", default=".")
     parser.add_argument("--surface", choices=("esp-idf", "arduino"), required=True)
     parser.add_argument("--selector", default="all")
-    parser.add_argument("--idf-versions", default="v5.5.4,v6.0.2")
-    parser.add_argument("--arduino-core", default="3.3.10")
+    parser.add_argument("--idf-versions", default="v5.5.5,v6.0.2")
+    parser.add_argument("--arduino-core", default="3.3.11")
     parser.add_argument("--fqbn", default="esp32:esp32:esp32s3")
     parser.add_argument("--github-output")
     args = parser.parse_args()

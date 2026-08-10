@@ -1,5 +1,7 @@
 # Repository Structure
 
+[English](repository-structure.md) | [简体中文](repository-structure_ZH.md)
+
 This repository uses the canonical Waveshare ESP32 product layout for maintained examples:
 
 ```text

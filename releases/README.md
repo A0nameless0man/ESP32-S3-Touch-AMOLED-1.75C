@@ -1,5 +1,7 @@
 # Release Scripts
 
+[English](README.md) | [简体中文](README_ZH.md)
+
 The scripts in this directory package CI build outputs, download workflow artifacts, validate
 combined firmware, and stage GitHub Release assets.
 
@@ -41,9 +43,9 @@ python3 releases/package_firmware.py \
 python3 releases/package_firmware.py \
   --framework arduino \
   --project examples/arduino/examples/01_HelloWorld \
-  --build-dir build/01_HelloWorld-3.3.10 \
-  --name ESP32-S3-Touch-AMOLED-1.75C-01_HelloWorld-arduino-3.3.10 \
-  --framework-version 3.3.10 \
+  --build-dir build/01_HelloWorld-3.3.11 \
+  --name ESP32-S3-Touch-AMOLED-1.75C-01_HelloWorld-arduino-3.3.11 \
+  --framework-version 3.3.11 \
   --target esp32s3 \
   --git-sha <git-sha> \
   --output-dir release-artifacts
