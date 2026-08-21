@@ -178,7 +178,7 @@ constexpr AppLauncherData STYLESHEET_466_466_DARK_APP_LAUNCHER_DATA = {
         .main_size = gui::StyleSize::RECT_W_PERCENT(100, 80),
         .main_layout_column_pad = 10,
         // 页面指示点上浮让位弧形 nav dock(dock 占 y394-456)
-        .main_layout_bottom_offset = 70,
+        .main_layout_bottom_offset = 48,
         .spot_inactive_size = gui::StyleSize::SQUARE(12),
         .spot_active_size = gui::StyleSize::RECT(30, 12),
         .spot_inactive_background_color = gui::StyleColor::COLOR(0xC6C6C6),
