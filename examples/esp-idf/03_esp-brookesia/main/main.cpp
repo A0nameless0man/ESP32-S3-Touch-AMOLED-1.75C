@@ -6,6 +6,7 @@
 
 #include "bsp/esp-bsp.h"
 #include "esp_brookesia.hpp"
+#include "phone_stylesheet_466.hpp"
 #include "boost/thread.hpp"
 #ifdef ESP_UTILS_LOG_TAG
 #   undef ESP_UTILS_LOG_TAG
@@ -66,6 +67,12 @@ extern "C" void app_main(void)
         LvLockGuard gui_guard;
 
         /* Begin the phone */
+        /* [CIRCLE-UI] Register the round-screen (466x466) stylesheet before
+         * begin: Phone::begin picks the sheet matching the display resolution
+         * exactly, so the 2x2 launcher grid and arc navigation dock apply. */
+        ESP_UTILS_CHECK_FALSE_EXIT(
+            phone->addStylesheet(STYLESHEET_466_466_DARK), "Add 466x466 stylesheet failed"
+        );
         ESP_UTILS_CHECK_FALSE_EXIT(phone->begin(), "Begin failed");
         // assert(phone->getDisplay().showContainerBorder() && "Show container border failed");
 

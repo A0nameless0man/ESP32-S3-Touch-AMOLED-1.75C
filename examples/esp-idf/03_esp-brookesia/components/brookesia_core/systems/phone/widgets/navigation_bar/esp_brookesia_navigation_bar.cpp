@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include <algorithm>
+#include <math.h>
 #include "esp_brookesia_systems_internal.h"
 #if !ESP_BROOKESIA_PHONE_NAVIGATION_BAR_ENABLE_DEBUG_LOG
 #   define ESP_BROOKESIA_UTILS_DISABLE_DEBUG_LOG
@@ -19,6 +20,17 @@ namespace esp_brookesia::systems::phone {
 #define VISUAL_FLEX_SHOW_ANIM_PERIOD_MS     200
 #define VISUAL_FLEX_SHOW_DURATION_MS        2000
 #define VISUAL_FLEX_HIDE_ANIM_PERIOD_MS     200
+
+// [CIRCLE-UI] Round-screen arc navigation bar geometry.
+// The visible bar is an annular band concentric with the round screen
+// (drawn in DRAW_MAIN, see onArcDrawEventCallback); buttons are placed
+// with their centers on the arc (polar placement in updateByNewData).
+// LVGL arc angles: 0 deg = 3 o'clock, 90 deg = 6 o'clock (bottom).
+static constexpr float NAV_ARC_INSET       = 10.0f;  // gap between band outer edge and screen edge
+static constexpr float NAV_ARC_THICKNESS   = 44.0f;  // radial thickness of the band
+static constexpr float NAV_ARC_HALF_ANGLE  = 32.0f;  // band spans 90 +/- this (deg)
+static constexpr float NAV_ARC_BTN_STEP    = 24.0f;  // angular pitch between button centers
+static constexpr int   NAV_ARC_BTN_SIZE    = 60;     // square button side
 
 NavigationBar::NavigationBar(base::Context &core, const NavigationBar::Data &data):
     _system_context(core),
@@ -89,8 +101,12 @@ bool NavigationBar::begin(lv_obj_t *parent)
     // Main
     lv_obj_add_style(main_obj.get(), _system_context.getDisplay().getCoreContainerStyle(), 0);
     lv_obj_align(main_obj.get(), LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_flex_flow(main_obj.get(), LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(main_obj.get(), LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    // [CIRCLE-UI] Main is a transparent hit-area container covering the arc
+    // bounding box; the visible band is drawn by the DRAW_MAIN event (so the
+    // show/hide slide animation moves band and buttons as one unit).
+    // No flex layout: buttons get polar placement in updateByNewData().
+    lv_obj_set_style_bg_opa(main_obj.get(), LV_OPA_TRANSP, 0);
+    lv_obj_add_event_cb(main_obj.get(), onArcDrawEventCallback, LV_EVENT_DRAW_MAIN, this);
     lv_obj_clear_flag(main_obj.get(), LV_OBJ_FLAG_SCROLLABLE);
     // Button
     for (int i = 0; i < BUTTON_NUM; i++) {
@@ -355,11 +371,29 @@ bool NavigationBar::updateByNewData(void)
 
     for (int i = 0; i < BUTTON_NUM; i++) {
         // Button
-        lv_obj_set_size(_button_objs[i].get(), _data.main.size.width / BUTTON_NUM,
-                        _data.main.size.height);
+        // [CIRCLE-UI] Square button centered on the arc (polar placement):
+        // theta spreads around 90 deg; radius = mid of the band.
+        lv_obj_set_size(_button_objs[i].get(), NAV_ARC_BTN_SIZE, NAV_ARC_BTN_SIZE);
+        lv_obj_set_style_radius(_button_objs[i].get(), LV_RADIUS_CIRCLE, 0);
         lv_obj_set_style_bg_color(_button_objs[i].get(), lv_color_hex(_data.button.active_background_color.color),
                                   LV_STATE_PRESSED);
         lv_obj_set_style_bg_opa(_button_objs[i].get(), _data.button.active_background_color.opacity, LV_STATE_PRESSED);
+        {
+            lv_display_t *disp = lv_display_get_default();
+            int res_w = lv_display_get_horizontal_resolution(disp);
+            int res_h = lv_display_get_vertical_resolution(disp);
+            float res = (res_w < res_h ? res_w : res_h);
+            float theta = 90.0f + (i - (BUTTON_NUM - 1) / 2.0f) * NAV_ARC_BTN_STEP;
+            float rad = theta * 3.14159265f / 180.0f;
+            float r_mid = res / 2 - NAV_ARC_INSET - NAV_ARC_THICKNESS / 2;
+            // Button center in screen coords, converted to offset from main center
+            // (main is bottom-aligned with height _data.main.size.height).
+            float bx = res_w / 2 + r_mid * cosf(rad);
+            float by = res_h / 2 + r_mid * sinf(rad);
+            float main_cy = res_h - _data.main.size.height / 2.0f;
+            lv_obj_align(_button_objs[i].get(), LV_ALIGN_CENTER,
+                         (int)(bx - res_w / 2), (int)(by - main_cy));
+        }
         // Icon main
         lv_obj_set_size(_icon_main_objs[i].get(), _data.button.icon_size.width, _data.button.icon_size.height);
         // Icon image
@@ -529,6 +563,32 @@ void NavigationBar::onDataUpdateEventCallback(lv_event_t *event)
     ESP_UTILS_CHECK_NULL_EXIT(navigation_bar, "Invalid navigation bar object");
 
     ESP_UTILS_CHECK_FALSE_EXIT(navigation_bar->updateByNewData(), "Update failed");
+}
+
+void NavigationBar::onArcDrawEventCallback(lv_event_t *event)
+{
+    // [CIRCLE-UI] Draw the annular band: concentric with the round screen,
+    // outer edge = screen radius - inset. NB: lv_draw_arc "radius" is the
+    // OUTER edge (ring spans [radius - width, radius]) - the semantic that
+    // cost a full debug cycle in circular_draw.
+    NavigationBar *navigation_bar = (NavigationBar *)lv_event_get_user_data(event);
+    lv_layer_t *layer = lv_event_get_layer(event);
+    lv_display_t *disp = lv_display_get_default();
+    int res_w = lv_display_get_horizontal_resolution(disp);
+    int res_h = lv_display_get_vertical_resolution(disp);
+    int res = (res_w < res_h ? res_w : res_h);
+
+    lv_draw_arc_dsc_t dsc;
+    lv_draw_arc_dsc_init(&dsc);
+    dsc.center = {(lv_value_precise_t)(res_w / 2), (lv_value_precise_t)(res_h / 2)};
+    dsc.radius = (int)(res / 2 - NAV_ARC_INSET);
+    dsc.width = (int)NAV_ARC_THICKNESS;
+    dsc.start_angle = (int)(90 - NAV_ARC_HALF_ANGLE);
+    dsc.end_angle = (int)(90 + NAV_ARC_HALF_ANGLE);
+    dsc.color = lv_color_hex(navigation_bar->_data.main.background_color.color);
+    dsc.opa = navigation_bar->_data.main.background_color.opacity;
+    dsc.rounded = 1;
+    lv_draw_arc(layer, &dsc);
 }
 
 void NavigationBar::onIconTouchEventCallback(lv_event_t *event)

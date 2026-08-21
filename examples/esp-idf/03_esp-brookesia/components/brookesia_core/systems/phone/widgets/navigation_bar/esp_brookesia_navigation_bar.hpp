@@ -95,6 +95,8 @@ private:
     bool resetFlexHideTimer(void);
 
     static void onDataUpdateEventCallback(lv_event_t *event);
+    // [CIRCLE-UI] Round-screen arc bar: draw the visible band on DRAW_MAIN
+    static void onArcDrawEventCallback(lv_event_t *event);
     static void onIconTouchEventCallback(lv_event_t *event);
     static void onVisualFlexAnimationExecuteCallback(void *var, int32_t value);
     static void onVisualFlexShowAnimationReadyCallback(lv_anim_t *anim);
