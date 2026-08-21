@@ -37,11 +37,16 @@ inline ArcGeom screen_circle(int inset = 2)
 }
 
 /**
- * 挂载圆屏裁剪绘制。
+ * 挂载圆屏裁剪绘制到容器对象。
+ *
+ * 对容器的每个直接子对象(按键/卡片)用自己的矩形独立做几何:
+ * 切割线贴子对象自身边界,圆角长在子对象与圆的交叉处。
+ * 挂在容器的几何会与子对象错位(容器通常比子对象大一圈),
+ * 圆角落在透明容器边上不可见 —— 这是本 API 遍历子树的原因。
  *
  * fillet_r  边↔圆交叉点处的圆角半径(0 = 直切,边界在交叉点转折)
- * bg_color  裁剪填充色,取对象背后的背景色
- * geom      裁剪参考圆(默认屏幕圆)
+ * bg_color  裁剪填充色,取子对象背后的背景色
+ * geom      裁剪参考圆(默认屏幕圆;inset=0 切割线即屏幕物理圆边)
  */
 void attach_circle_clip(lv_obj_t *obj, int fillet_r, uint32_t bg_color,
                         ArcGeom geom = screen_circle(2));

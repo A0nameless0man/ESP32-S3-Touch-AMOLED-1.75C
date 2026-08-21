@@ -561,7 +561,7 @@ static void kb_rebuild(lv_obj_t *container)
         lv_obj_set_style_pad_column(row, 4, 0);
         // 行级圆弧裁剪:行端越出圆边的键角由环带弧切+交叉圆角处理,
         // 弦宽足够的行自动零绘制 —— 键盘得以保持自然满宽
-        circdraw::attach_circle_clip(row, 12, COL_BG, circdraw::screen_circle(4));
+        circdraw::attach_circle_clip(row, 20, COL_BG, circdraw::screen_circle(7));
         int cnt = (int)strlen(letters[r]);
         // 行宽预算:字母行按位数定,弦收窄在 fit 时统一裁
         for (int i = 0; i < cnt; i++) {
@@ -580,7 +580,7 @@ static void kb_rebuild(lv_obj_t *container)
         lv_obj_set_style_border_width(row, 0, 0);
         lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_style_pad_column(row, 4, 0);
-        circdraw::attach_circle_clip(row, 12, COL_BG, circdraw::screen_circle(4));
+        circdraw::attach_circle_clip(row, 20, COL_BG, circdraw::screen_circle(7));
         static const char *sym3 = ",?!'.";
         for (const char *p = sym3; *p; p++) {
             char t[2] = {p[0], 0};
@@ -598,7 +598,7 @@ static void kb_rebuild(lv_obj_t *container)
     lv_obj_set_style_border_width(row, 0, 0);
     lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_pad_column(row, 6, 0);
-    circdraw::attach_circle_clip(row, 12, COL_BG, circdraw::screen_circle(4));
+    circdraw::attach_circle_clip(row, 20, COL_BG, circdraw::screen_circle(7));
 
     lv_obj_t *mode_key = kb_key(row, (s_kb_mode == 0) ? "aA" : (s_kb_mode == 1) ? "12" : "ab", 52, 48, kb_mode_cb);
     lv_obj_t *mode_lbl = lv_obj_get_child(mode_key, 0);

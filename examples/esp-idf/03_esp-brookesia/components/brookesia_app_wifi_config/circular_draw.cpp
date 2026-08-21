@@ -94,10 +94,13 @@ static void fillet_edge(lv_layer_t *layer, const ClipCfg *cfg, bool is_vert,
         float sweep = a_x - a_t2;
         while (sweep > M_PI) sweep -= 2 * (float)M_PI;
         while (sweep < -M_PI) sweep += 2 * (float)M_PI;
+        // 两段弧采样半径各外推 2px:弧边潗是裁掉区,外推吞掉三角扇边缘的
+        // 半透明抗锯齿像素(否则键色残留成 1px 细枝);
+        // 直边段 X→T1 不动 —— 那一侧是按键本体,不能越线
         for (int i = 0; i <= N_SAMPLES; i++) {
             float a = a_t2 + sweep * i / N_SAMPLES;
-            pts[n].x = C_X + R * cosf(a);
-            pts[n].y = C_Y + R * sinf(a);
+            pts[n].x = C_X + (R + 2) * cosf(a);
+            pts[n].y = C_Y + (R + 2) * sinf(a);
             n++;
         }
         // 圆角弧 T2→T1(圆角盘上,圆心 F):同样取短弧
@@ -108,8 +111,8 @@ static void fillet_edge(lv_layer_t *layer, const ClipCfg *cfg, bool is_vert,
         while (sweep2 < -M_PI) sweep2 += 2 * (float)M_PI;
         for (int i = 0; i <= N_SAMPLES; i++) {
             float a = b_t2 + sweep2 * i / N_SAMPLES;
-            pts[n].x = fx + rho * cosf(a);
-            pts[n].y = fy + rho * sinf(a);
+            pts[n].x = fx + (rho + 2) * cosf(a);
+            pts[n].y = fy + (rho + 2) * sinf(a);
             n++;
         }
         if (n < 3) {
@@ -130,28 +133,17 @@ static void fillet_edge(lv_layer_t *layer, const ClipCfg *cfg, bool is_vert,
     }
 }
 
-static void circle_clip_draw_cb(lv_event_t *e)
+/*
+ * 对单个矩形应用裁剪:环带 + 四边交叉圆角(几何核心,可作用于任意矩形)
+ */
+static void apply_clip(lv_layer_t *layer, const lv_area_t *co, const ClipCfg *cfg)
 {
-    lv_event_code_t code = lv_event_get_code(e);
-    ClipCfg *cfg = (ClipCfg *)lv_event_get_user_data(e);
-    if (code == LV_EVENT_DELETE) {
-        lv_free(cfg);
-        return;
-    }
-    if (code != LV_EVENT_DRAW_MAIN) {
-        return;
-    }
-
-    lv_obj_t *obj = (lv_obj_t *)lv_event_get_target(e);
-    lv_layer_t *layer = lv_event_get_layer(e);
-    lv_area_t co;
-    lv_obj_get_coords(obj, &co);
     const float C_X = cfg->geom.cx, C_Y = cfg->geom.cy, R = cfg->geom.r;
 
     // 快速路径:四个角全在圆内则无事可做
     float max_r = 0;
-    const int xs[2] = {co.x1, co.x2};
-    const int ys[2] = {co.y1, co.y2};
+    const int xs[2] = {co->x1, co->x2};
+    const int ys[2] = {co->y1, co->y2};
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
             float r = hypotf(xs[i] - C_X, ys[j] - C_Y);
@@ -170,7 +162,10 @@ static void circle_clip_draw_cb(lv_event_t *e)
     lv_draw_arc_dsc_t ring;
     lv_draw_arc_dsc_init(&ring);
     ring.center = {(lv_value_precise_t)(int)C_X, (lv_value_precise_t)(int)C_Y};
-    ring.radius = (int)((R + outer) / 2.0f);
+    // lv_draw_arc 的 radius 语义是外缘(源码 lv_draw_arc_get_area: rout=radius,
+    // 环带=[radius-width, radius])。要内缘正好贴 R:radius 给 outer,width=outer-R。
+    // 之前按“中心线”理解传 (R+outer)/2,实际内缘砍到 (3R-outer)/2≈224,切深了 ~9px
+    ring.radius = outer;
     ring.width = outer - (int)R;
     ring.start_angle = 0;
     ring.end_angle = 360;
@@ -180,10 +175,35 @@ static void circle_clip_draw_cb(lv_event_t *e)
 
     // 2) 四条边逐条配圆角:咬角楔块 = 直边段 + 圆角弧 + 圆弧,
     //    圆角盘与边相切、与参考圆内切,边界全程 G1 光滑
-    fillet_edge(layer, cfg, false, co.y1, +1, co.x1, co.x2); // 顶边
-    fillet_edge(layer, cfg, false, co.y2, -1, co.x1, co.x2); // 底边
-    fillet_edge(layer, cfg, true,  co.x1, +1, co.y1, co.y2); // 左边
-    fillet_edge(layer, cfg, true,  co.x2, -1, co.y1, co.y2); // 右边
+    fillet_edge(layer, cfg, false, co->y1, +1, co->x1, co->x2); // 顶边
+    fillet_edge(layer, cfg, false, co->y2, -1, co->x1, co->x2); // 底边
+    fillet_edge(layer, cfg, true,  co->x1, +1, co->y1, co->y2); // 左边
+    fillet_edge(layer, cfg, true,  co->x2, -1, co->y1, co->y2); // 右边
+}
+
+static void circle_clip_draw_cb(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    ClipCfg *cfg = (ClipCfg *)lv_event_get_user_data(e);
+    if (code == LV_EVENT_DELETE) {
+        lv_free(cfg);
+        return;
+    }
+    if (code != LV_EVENT_DRAW_POST) {
+        return;
+    }
+
+    // 对子树的每个直接子对象分别做几何:切割线/圆角必须落在子对象
+    // 自身的矩形边界上(挂容器的几何会与子对象错位,圆角长不到按键上)
+    lv_obj_t *obj = (lv_obj_t *)lv_event_get_target(e);
+    lv_layer_t *layer = lv_event_get_layer(e);
+
+    uint32_t n = lv_obj_get_child_count(obj);
+    for (uint32_t i = 0; i < n; i++) {
+        lv_area_t co;
+        lv_obj_get_coords(lv_obj_get_child(obj, i), &co);
+        apply_clip(layer, &co, cfg);
+    }
 }
 
 void attach_circle_clip(lv_obj_t *obj, int fillet_r, uint32_t bg_color, ArcGeom geom)
@@ -192,9 +212,10 @@ void attach_circle_clip(lv_obj_t *obj, int fillet_r, uint32_t bg_color, ArcGeom 
     cfg->geom = geom;
     cfg->fillet_r = fillet_r;
     cfg->bg = bg_color;
-    // DRAW_MAIN 在控件本体绘制之后、子对象之前触发 → 环带能盖住越界部分,
-    // 而标签(子对象)画在其上不受影响;DELETE 时释放配置
-    lv_obj_add_event_cb(obj, circle_clip_draw_cb, LV_EVENT_DRAW_MAIN, cfg);
+    // DRAW_POST 在本对象及其全部子对象(按键)画完之后触发:
+    // 环带/咬角才能压住子对象的越界像素(DRAW_MAIN 会被子对象回盖);
+    // DELETE 时释放配置
+    lv_obj_add_event_cb(obj, circle_clip_draw_cb, LV_EVENT_DRAW_POST, cfg);
     lv_obj_add_event_cb(obj, circle_clip_draw_cb, LV_EVENT_DELETE, cfg);
 }
 
