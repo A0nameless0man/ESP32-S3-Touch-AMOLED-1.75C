@@ -35,7 +35,9 @@ extern "C" void app_main(void)
     bsp_display_cfg_t display_config = {};
     display_config.lv_adapter_cfg = lv_adapter_config;
     display_config.rotation = ESP_LV_ADAPTER_ROTATE_0;
-    display_config.tear_avoid_mode = ESP_LV_ADAPTER_TEAR_AVOID_MODE_NONE;
+    /* TE sync: wait for CO5300 tearing-effect pulse (GPIO13) before each
+     * flush band -> tear-free UI. Verified working on this panel (60 Hz). */
+    display_config.tear_avoid_mode = ESP_LV_ADAPTER_TEAR_AVOID_MODE_TE_SYNC;
     display_config.touch_flags.mirror_x = 1;
     display_config.touch_flags.mirror_y = 1;
 
