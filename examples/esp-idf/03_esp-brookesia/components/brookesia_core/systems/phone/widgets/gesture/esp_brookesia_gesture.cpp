@@ -89,6 +89,15 @@ bool Gesture::begin(lv_obj_t *parent)
         lv_anim_set_early_apply(indicator_bar_scale_back_anims[i].get(), false);
         lv_anim_set_exec_cb(indicator_bar_scale_back_anims[i].get(), onIndicatorBarScaleBackAnimationExecuteCallback);
         lv_anim_set_ready_cb(indicator_bar_scale_back_anims[i].get(), onIndicatorBarScaleBackAnimationReadyCallback);
+        // [CIRCLE-UI] Bottom bar: transparentize the rectangular lv_bar parts
+        // and draw a screen-concentric arc instead (see onIndicatorBarArcDrawCallback).
+        // The object WIDTH remains the "length" state machine untouched.
+        if (static_cast<Gesture::IndicatorBarType>(i) == Gesture::IndicatorBarType::BOTTOM) {
+            lv_obj_set_style_bg_opa(indicator_bars[i].get(), LV_OPA_TRANSP, 0);
+            lv_obj_set_style_bg_opa(indicator_bars[i].get(), LV_OPA_TRANSP, LV_PART_INDICATOR);
+            lv_obj_add_event_cb(indicator_bars[i].get(), onIndicatorBarArcDrawCallback,
+                                LV_EVENT_DRAW_MAIN, this);
+        }
     }
 
     // Save objects
@@ -451,6 +460,15 @@ bool Gesture::updateByNewData(void)
         _indicator_bar_scale_factors[i] =  (_indicator_bar_max_lengths[i] - _indicator_bar_min_lengths[i]) /
                                            (float)bar_range;
         lv_obj_align(_indicator_bars[i].get(), align, align_x_offset, align_y_offset);
+        // [CIRCLE-UI] Bottom bar: enlarge the box to cover the arc bounding
+        // box (width untouched - it is the length state); re-transparentize
+        // in case the style refresh above restored opaque parts
+        if (i_type == Gesture::IndicatorBarType::BOTTOM) {
+            lv_obj_set_height(_indicator_bars[i].get(), 52);
+            lv_obj_align(_indicator_bars[i].get(), LV_ALIGN_BOTTOM_MID, 0, -6);
+            lv_obj_set_style_bg_opa(_indicator_bars[i].get(), LV_OPA_TRANSP, 0);
+            lv_obj_set_style_bg_opa(_indicator_bars[i].get(), LV_OPA_TRANSP, LV_PART_INDICATOR);
+        }
     }
     // Data
     _direction_tan_threshold = tan((int)data.threshold.direction_angle * M_PI / 180);
@@ -469,6 +487,49 @@ void Gesture::onDataUpdateEventCallback(lv_event_t *event)
     ESP_UTILS_CHECK_NULL_EXIT(gesture, "Invalid gesture object");
 
     ESP_UTILS_CHECK_FALSE_EXIT(gesture->updateByNewData(), "Update gesture object style failed");
+}
+
+void Gesture::onIndicatorBarArcDrawCallback(lv_event_t *event)
+{
+    // [CIRCLE-UI] Bottom gesture indicator as a screen-concentric arc.
+    // The object width (the existing "length" state) maps linearly to the
+    // arc half-angle: idle max width -> +/-32 deg, erased -> 0 (invisible).
+    // lv_draw_arc "radius" is the OUTER edge (ring spans [radius-width, radius]).
+    Gesture *gesture = (Gesture *)lv_event_get_user_data(event);
+    lv_obj_t *bar = (lv_obj_t *)lv_event_get_target(event);
+    lv_layer_t *layer = lv_event_get_layer(event);
+    constexpr float ARC_HALF_ANGLE_MAX = 32.0f;
+    constexpr float ARC_INSET = 8.0f;
+    constexpr float ARC_THICKNESS = 10.0f;
+
+    lv_display_t *disp = lv_display_get_default();
+    int res_w = lv_display_get_horizontal_resolution(disp);
+    int res_h = lv_display_get_vertical_resolution(disp);
+    int res = (res_w < res_h ? res_w : res_h);
+
+    int width = lv_obj_get_width(bar);
+    int max_width = gesture->_indicator_bar_max_lengths[static_cast<int>(Gesture::IndicatorBarType::BOTTOM)];
+    if (max_width <= 0) {
+        return;
+    }
+    float half = ARC_HALF_ANGLE_MAX * width / (float)max_width;
+    if (half < 0.5f) {
+        return;
+    }
+
+    const gui::StyleColor &col = gesture->data.indicator_bars[static_cast<int>(
+                                     Gesture::IndicatorBarType::BOTTOM)].indicator.color;
+    lv_draw_arc_dsc_t dsc;
+    lv_draw_arc_dsc_init(&dsc);
+    dsc.center = {(lv_value_precise_t)(res_w / 2), (lv_value_precise_t)(res_h / 2)};
+    dsc.radius = (int)(res / 2 - ARC_INSET);
+    dsc.width = (int)ARC_THICKNESS;
+    dsc.start_angle = (int)(90 - half);
+    dsc.end_angle = (int)(90 + half);
+    dsc.color = lv_color_hex(col.color);
+    dsc.opa = col.opacity;
+    dsc.rounded = 1;
+    lv_draw_arc(layer, &dsc);
 }
 
 void Gesture::onTouchDetectTimerCallback(struct _lv_timer_t *t)

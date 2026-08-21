@@ -249,8 +249,9 @@ constexpr Gesture::IndicatorBarData STYLESHEET_466_466_DARK_GESTURE_LEFT_RIGHT_I
 
 constexpr Gesture::IndicatorBarData STYLESHEET_466_466_DARK_GESTURE_BOTTOM_INDICATOR_BAR_DATA = {
     .main = {
+        // [CIRCLE-UI] 52% 宽:对象宽度是弧长状态,盒子需盖住弧端圆头的包围盒
         .size_min = gui::StyleSize::RECT(0, 10),
-        .size_max = gui::StyleSize::RECT_W_PERCENT(50, 10),
+        .size_max = gui::StyleSize::RECT_W_PERCENT(52, 10),
         .radius = 5,
         .layout_pad_all = 2,
         .color = gui::StyleColor::COLOR(0x1A1A1A),

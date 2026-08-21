@@ -149,6 +149,8 @@ private:
     bool updateByNewData(void);
 
     static void onDataUpdateEventCallback(lv_event_t *event);
+    // [CIRCLE-UI] Round-screen arc gesture indicator (bottom bar)
+    static void onIndicatorBarArcDrawCallback(lv_event_t *event);
     static void onTouchDetectTimerCallback(struct _lv_timer_t *t);
     static void onIndicatorBarScaleBackAnimationExecuteCallback(void *var, int32_t value);
     static void onIndicatorBarScaleBackAnimationReadyCallback(lv_anim_t *anim);
